@@ -1,6 +1,9 @@
 <?php
 
-class Database {
+namespace Database;
+
+class Database
+{
 
     private $host;
     private $user;
