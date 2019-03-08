@@ -1,0 +1,1 @@
+# Catalyst [![Maintainability](https://api.codeclimate.com/v1/badges/fc59ecf978df906c9065/maintainability)](https://codeclimate.com/github/gmrsagar/catalyst/maintainability)
