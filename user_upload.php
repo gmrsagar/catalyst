@@ -64,11 +64,13 @@ if (!isset($argv[1])) {
                 $dryRun = false;
 
                 // Check if dry run
-                if ( (isset($argv[3]) && ($argv[3] === '--dry_run')) ) {
-                    $dryRun = true;
-                } else {
-                    echo 'Invalid command, type --help for a list of available commands';
-                    return;
+                if (isset($argv[3])) {
+                    if ($argv[3] === '--dry_run') {
+                        $dryRun = true;
+                    } else {
+                        echo 'Invalid command, type --help for a list of available commands';
+                        return;
+                    }
                 }
                 
                 if (!$dryRun) {
