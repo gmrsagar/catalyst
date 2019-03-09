@@ -27,6 +27,11 @@ function csvErrorLogger($array, $error)
     return false;
 }
 
+// Check if command is specified
+if (!isset($argv[1])) {
+    echo 'Type --help for a list of commands';
+    return;
+}
 //0th position is phpfile name
 //1st position is arguments , we can ignore other for fix it to 2
     $argument1 = $argv[1];
@@ -56,9 +61,20 @@ function csvErrorLogger($array, $error)
             break;
 
             case 'file':
+                $dryRun = false;
+
+                // Check if dry run
+                if ( (isset($argv[3]) && ($argv[3] === '--dry_run')) ) {
+                    $dryRun = true;
+                } else {
+                    echo 'Invalid command, type --help for a list of available commands';
+                    return;
+                }
                 
+                if (!$dryRun) {
                 // get db instance
                 $db = Database::getInstance()->getLink();
+                }
 
                 //fetch the filename
                 $filename = $argv[2];
@@ -78,6 +94,8 @@ function csvErrorLogger($array, $error)
                         }
                         continue;  
                     }
+
+                    if ($dryRun) continue;
 
                     $normalizedArray = [];
 
