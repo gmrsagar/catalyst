@@ -5,6 +5,12 @@ require_once __DIR__ . '/vendor/autoload.php';
 use Database\Database;
 use Helpers\Parser;
 
+$original_cols = [
+    'name',
+    'surname',
+    'email'
+];
+
 //0th position is phpfile name
 //1st position is arguments , we can ignore other for fix it to 2
     $argument1 = $argv[1];
@@ -34,14 +40,51 @@ use Helpers\Parser;
             break;
 
             case 'file':
+                
+                // get db instance
+                $db = Database::getInstance()->getLink();
+
+                //fetch the filename
                 $filename = $argv[2];
                 $filename = $filename.'.csv';
                 
                 //file parsing code
                 $parser = Parser::getInstance();
-                $file = $parser->parseCsv($filename);
-                print_r($file);
-                die;
+                $files = $parser->parseCsv($filename);
+
+                foreach ($files as $file) {
+                    //Validate email address
+                    if( !(filter_var($file[2], FILTER_VALIDATE_EMAIL)) ){
+                        echo 'Invalid Email, Skipping Record'."\n";
+                        continue;  
+                    }
+
+                    $normalizedArray = [];
+
+                    // Normalize the user data
+                    foreach ($file as $item) {
+                        $item = strtolower($item);
+                        $item = ucfirst($item);
+                        $normalizedArray[] = $item;
+                    }
+                    $normalizedArray[2] = strtolower($normalizedArray[2]);
+
+                     //insert to db
+                    $sql = Database::getInstance()->buildInsertQuery(
+                        $original_cols, $normalizedArray, 'users'
+                    );
+                    
+                    if ($sql === false) {
+                        die('Failed to build sql');
+                    }
+
+                    //Display success or failure message
+                    $results = mysqli_query($db, $sql);
+                    if ($results) {
+                        echo 'Data Inserted Successfully';
+                    }
+                    echo mysqli_error($db)."\n";
+                } 
             break;
 
             default:
