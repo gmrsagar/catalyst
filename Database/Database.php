@@ -5,10 +5,10 @@ namespace Database;
 class Database
 {
 
-    private $host;
-    private $user;
-    private $password;
-    private $db_name;
+    private $host = '127.0.0.1';
+    private $user = 'warp';
+    private $password = 'invisi12';
+    private $db_name = 'catalyst';
 
     //db connection
     private $link;
@@ -59,26 +59,19 @@ class Database
 
         //remove last comma
         $cols = substr($cols, 0 , -1);
+        
         $sql = "INSERT INTO "."`$table`"." ($cols) VALUES ";
 
         //check data
         if(!isset($array)||empty($array)) return false;
 
         //build sub sql
-        $sub_sql = '';
-        foreach($array as $key => $val){
-            //skip wrong data
-            if(!is_array($val)) continue;
-
-            $vals = array_reduce($val, function($carry, $item){
-                //filter
-                $item = filter_var($item, FILTER_SANITIZE_STRING);
-                return $carry."'".$item."','";
-            });
-            $vals = substr($vals, 0 , -1);
-            $sub_sql .= "($vals)".',';
-        }
-        $sql = $sql.substr_replace($sub_sql, ";", -1);
+        $array  = array_reduce($array, function($carry, $item) {
+            return $carry.'"'.$item.'",';
+        });
+        $array = substr($array, 0, -1);
+        $sub_sql = ($array);
+        $sql = $sql."(".$sub_sql.");";
         return $sql;
     }
 

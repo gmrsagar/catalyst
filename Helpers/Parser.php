@@ -6,11 +6,6 @@ class Parser
 {
     public static $instance;
 
-    private function __construct()
-    {
-
-    }
-
     /**
      * @return Parser
      * Singleton
@@ -54,5 +49,5 @@ class Parser
         return $csvArray;
     }
 
-    
+
 }
