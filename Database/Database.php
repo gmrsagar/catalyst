@@ -5,10 +5,10 @@ namespace Database;
 class Database
 {
 
-    private $host = '127.0.0.1';
-    private $user = 'warp';
-    private $password = 'invisi12';
-    private $db_name = 'catalyst';
+    private $host;
+    private $user;
+    private $password;
+    private $db_name;
 
     //db connection
     private $link;

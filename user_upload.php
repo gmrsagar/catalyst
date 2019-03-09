@@ -11,6 +11,22 @@ $original_cols = [
     'email'
 ];
 
+/**
+ * @param $array, $error
+ * @return bool
+ */
+function csvErrorLogger($array, $error)
+{
+    $array = array_reduce($array, function($carry, $item) {
+        return $carry.'`'.$item.'`,';
+    });
+    $error = 'Could not Insert the row '.$array.' '.$error."\n";
+    if (file_put_contents('error.log', $error, FILE_APPEND)) {
+        return true;
+    }
+    return false;
+}
+
 //0th position is phpfile name
 //1st position is arguments , we can ignore other for fix it to 2
     $argument1 = $argv[1];
@@ -55,7 +71,11 @@ $original_cols = [
                 foreach ($files as $file) {
                     //Validate email address
                     if( !(filter_var($file[2], FILTER_VALIDATE_EMAIL)) ){
-                        echo 'Invalid Email, Skipping Record'."\n";
+                        $error = 'Invalid Email, Skipping Record';
+                        $log = csvErrorLogger($file, $error);
+                        if($log) {
+                            echo $error."\n";
+                        }
                         continue;  
                     }
 
@@ -81,9 +101,13 @@ $original_cols = [
                     //Display success or failure message
                     $results = mysqli_query($db, $sql);
                     if ($results) {
-                        echo 'Data Inserted Successfully';
+                        echo 'Data Inserted Successfully'.PHP_EOL;
+                    } else {
+                        $log = csvErrorLogger($normalizedArray, mysqli_error($db));
+                        if($log) {
+                            echo mysqli_error($db)."\n";
+                        }
                     }
-                    echo mysqli_error($db)."\n";
                 } 
             break;
 
