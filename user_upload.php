@@ -20,7 +20,7 @@ function csvErrorLogger($array, $error)
     $array = array_reduce($array, function($carry, $item) {
         return $carry.'`'.$item.'`,';
     });
-    $error = 'Could not Insert the row '.$array.' '.$error."\n";
+    $error = 'Could not Insert the row '.$array.' '.$error.PHP_EOL;
     if (file_put_contents('error.log', $error, FILE_APPEND)) {
         return true;
     }
@@ -58,6 +58,14 @@ if (!isset($argv[1])) {
 
             case 'help':
                 //print the list of commands
+                echo 'Usage :: php user_upload.php [OPTIONS]'.PHP_EOL."\n";
+                echo 'The following options are available'.PHP_EOL;
+                echo '  --file csv_file_name    parse the given csv file and insert into the user table'.PHP_EOL;
+                echo '  --dry_run               used with the --file directive. parse the given file without inserting to the database'.PHP_EOL;
+                echo '  --create_table          create the MySQL user table'.PHP_EOL;
+                echo '  -u MySQL_username       user for accessing MySQL'.PHP_EOL;
+                echo '  -p MySQL_password       password to use while connecting to MySQL'.PHP_EOL;
+                echo '  --help                  display this help screen'.PHP_EOL;
             break;
 
             case 'file':
@@ -92,7 +100,7 @@ if (!isset($argv[1])) {
                         $error = 'Invalid Email, Skipping Record';
                         $log = csvErrorLogger($file, $error);
                         if($log) {
-                            echo $error."\n";
+                            echo $error.PHP_EOL;
                         }
                         continue;  
                     }
@@ -125,7 +133,7 @@ if (!isset($argv[1])) {
                     } else {
                         $log = csvErrorLogger($normalizedArray, mysqli_error($db));
                         if($log) {
-                            echo mysqli_error($db)."\n";
+                            echo mysqli_error($db).PHP_EOL;
                         }
                     }
                 } 
