@@ -81,4 +81,5 @@ class Database
         $sql = $sql.substr_replace($sub_sql, ";", -1);
         return $sql;
     }
+
 }
