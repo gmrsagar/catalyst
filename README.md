@@ -25,9 +25,9 @@ __--dry_run__ &nbsp; &nbsp; &nbsp; Used with the --file directive. Parses the gi
 
 Composer update must be executed to install the dependencies.
 
-The directives __-u, -p and -h__ must first be fired to set the MySQL credentials.
+Database 'catalyst' must exist or update the database name within the Database.php file.
 
-The database used is called 'catalyst'. 
+The directives __-u, -p and -h__ must first be fired to set the MySQL credentials.
 
 The users table must be created with the __--create_table__ directive.
 
