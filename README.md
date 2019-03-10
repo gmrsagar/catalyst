@@ -13,7 +13,7 @@ __-p MySQL_password__ &nbsp; &nbsp; &nbsp; The password used to connect to MySQL
 
 __-h MySQL_host__ &nbsp; &nbsp; &nbsp; &nbsp; The host for MySQL instance.
 
-__--file csv_file_name__ &nbsp; &nbsp; &nbsp; Parses the given csv file and inserts each row to the users table.
+__--file csv_file_name__ &nbsp; &nbsp; &nbsp; Parses the given csv file (filename without extension) and inserts each row to the users table.
 
 __--create_table__ &nbsp; &nbsp; &nbsp; Create the users table.
 
