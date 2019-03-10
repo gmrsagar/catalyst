@@ -2,9 +2,11 @@
 
 namespace Database;
 
+use Dotenv\Dotenv;
+
+
 class Database
 {
-
     private $host;
     private $user;
     private $password;
@@ -29,6 +31,13 @@ class Database
 
     private function __construct()
     {
+        $env = Dotenv::create(__DIR__.'/../');
+        $env->load();
+
+        $this->host = $_ENV['MSQL_HOST'];
+        $this->user = $_ENV['MSQL_USER'];
+        $this->password = $_ENV['MSQL_PASS'];
+
         $this->link = mysqli_connect(
             $this->host, $this->user, $this->password, $this->db_name
         );
