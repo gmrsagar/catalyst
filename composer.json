@@ -4,5 +4,8 @@
       "Database": "./",
       "Helpers": "./"
     }
+  },
+  "require": {
+    "vlucas/phpdotenv": "^3.3"
   }
 }

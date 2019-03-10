@@ -27,6 +27,28 @@ function csvErrorLogger($array, $error)
     return false;
 }
 
+function updateEnv($string, $flag)
+{
+    if ($flag=='u') {
+        $pattern = "/MSQL_USER=\.*/";
+        $string = "MSQL_USER="."\"$string\"";
+    } elseif ($flag=='p') {
+        $pattern = "/MSQL_PASS=/";
+        $string = "MSQL_PASS="."\"$string\"";
+    } else {
+        $pattern = "/MSQL_HOST=\.*/";
+        $string = "MSQL_HOST="."\"$string\"";
+    }
+
+    $file = file_get_contents('.env');
+    $output = preg_replace(
+        $pattern, $string, $file
+    );
+    file_put_contents('.env', $output);
+    if($output) return true;
+    return false;
+}
+
 // Check if command is specified
 if (!isset($argv[1])) {
     echo 'Type --help for a list of commands';
@@ -58,8 +80,6 @@ if (!isset($argv[1])) {
 
             case 'help':
                 //print the list of commands
-                $use = getenv('USER');
-                echo $use;
             break;
 
             case 'file':
@@ -139,25 +159,37 @@ if (!isset($argv[1])) {
         }
     } elseif (substr( $argument1, 0, 1 ) === "-") {
         $command = substr($argument1, 1);
-
-        switch ($command) {
-            case 'u':
-                echo 'here in u';
-                $user = 'warp';
-                putenv("USER=$user");
-                echo getenv('USER');
-            break;
-
-            case 'p':
-            break;
-
-            case 'h':
-            break;
-
-            default:
-            echo 'I don\'t know this';
+        
+        if (($command === 'u') || ($command === 'p') || ($command === 'h')) {
+            if (isset($argv[2])) {
+                $string = $argv[2];
+                $updateVar = updateEnv($string, $command);
+                if ($updateVar) { echo 'Updated Successfully'; }
+            } else {
+                return;
+            }
+        } else {
+            echo 'invalid';
+            return;
         }
-
-    } else {
-        echo "invalid parameter";
     }
+        
+    //     switch ($command) {
+    //         case 'u':
+    //             $updateUser = updateEnv($user, 'u');
+    //             if ($updateUser) { echo 'Username Updated'; }
+    //         break;
+
+    //         case 'p':
+    //         break;
+
+    //         case 'h':
+    //         break;
+
+    //         default:
+    //         echo 'I don\'t know this';
+    //     }
+
+    // } else {
+    //     echo "invalid parameter";
+    // }
