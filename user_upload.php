@@ -82,7 +82,7 @@ if (!isset($argv[1])) {
                 $filename = $argv[2];
                 $filename = $filename.'.csv';
                 
-                //file parsing code
+                //file parsing
                 $parser = Parser::getInstance();
                 $files = $parser->parseCsv($filename);
 
@@ -97,6 +97,7 @@ if (!isset($argv[1])) {
                         continue;  
                     }
 
+                    //don't proceed if dry_run is enabled
                     if ($dryRun) continue;
 
                     $normalizedArray = [];
@@ -134,7 +135,22 @@ if (!isset($argv[1])) {
             default:
                 echo "i dont know  this";
         }
-    }
-    else {
+    } elseif (substr( $argument1, 0, 2 ) === "-") {
+        $command = substr($argument1, 2);
+
+        switch ($command) {
+            case 'u':
+            break;
+
+            case 'p':
+            break;
+
+            case 'h':
+            break;
+
+            default:
+        }
+
+    } else {
         echo "invalid parameter";
     }
