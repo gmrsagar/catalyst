@@ -3,16 +3,22 @@
 ## Dependencies
 
 ### [PHPDotEnv](https://github.com/vlucas/phpdotenv)
-Used for implement environment files to safely store credentials.
+Used for implementation of environment files to safely store credentials.
 
 ## Directives
 
 -u MySQL_username        Provide the MySql Username.
+
 -p MySQL_password        The password used to connect to MySQL.
+
 -h MySQL_host            The host for MySQL instance.
+
 --file csv_file_name     Parses the given csv file and inserts each row to the users table.
+
 --create_table           Create the users table.
+
 --help                   Display the list of available options.
+
 --dry_run                Used with the --file directive. Parses the given file without database insertions.
 
 ## Installation and Activation
