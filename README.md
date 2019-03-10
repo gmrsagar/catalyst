@@ -7,19 +7,19 @@ Used for implementation of environment files to safely store credentials.
 
 ## Directives
 
--u MySQL_username        Provide the MySql Username.
+__-u MySQL_username__        Provide the MySql Username.
 
--p MySQL_password        The password used to connect to MySQL.
+__-p MySQL_password__        The password used to connect to MySQL.
 
--h MySQL_host            The host for MySQL instance.
+__-h MySQL_host__            The host for MySQL instance.
 
---file csv_file_name     Parses the given csv file and inserts each row to the users table.
+__--file csv_file_name__     Parses the given csv file and inserts each row to the users table.
 
---create_table           Create the users table.
+__--create_table__           Create the users table.
 
---help                   Display the list of available options.
+__--help__                   Display the list of available options.
 
---dry_run                Used with the --file directive. Parses the given file without database insertions.
+__--dry_run__                Used with the --file directive. Parses the given file without database insertions.
 
 ## Installation and Activation
 
