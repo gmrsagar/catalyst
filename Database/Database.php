@@ -8,7 +8,7 @@ class Database
     private $host;
     private $user;
     private $password;
-    private $db_name;
+    private $db_name = 'catalyst';
 
     //db connection
     private $link;

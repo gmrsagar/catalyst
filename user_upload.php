@@ -58,6 +58,8 @@ if (!isset($argv[1])) {
 
             case 'help':
                 //print the list of commands
+                $use = getenv('USER');
+                echo $use;
             break;
 
             case 'file':
@@ -135,11 +137,15 @@ if (!isset($argv[1])) {
             default:
                 echo "i dont know  this";
         }
-    } elseif (substr( $argument1, 0, 2 ) === "-") {
-        $command = substr($argument1, 2);
+    } elseif (substr( $argument1, 0, 1 ) === "-") {
+        $command = substr($argument1, 1);
 
         switch ($command) {
             case 'u':
+                echo 'here in u';
+                $user = 'warp';
+                putenv("USER=$user");
+                echo getenv('USER');
             break;
 
             case 'p':
@@ -149,6 +155,7 @@ if (!isset($argv[1])) {
             break;
 
             default:
+            echo 'I don\'t know this';
         }
 
     } else {
