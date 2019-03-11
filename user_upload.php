@@ -5,12 +5,6 @@ require_once __DIR__ . '/vendor/autoload.php';
 use Database\Database;
 use Helpers\Parser;
 
-$original_cols = [
-    'name',
-    'surname',
-    'email'
-];
-
 /**
  * @param $array, $error
  * @return bool
@@ -27,45 +21,115 @@ function csvErrorLogger($array, $error)
     return false;
 }
 
-function updateEnv($string, $flag)
-{
-    if ($flag=='u') {
-        $pattern = "/MSQL_USER=\.*/";
-        $string = "MSQL_USER="."\"$string\"";
-    } elseif ($flag=='p') {
-        $pattern = "/MSQL_PASS=/";
-        $string = "MSQL_PASS="."\"$string\"";
-    } else {
-        $pattern = "/MSQL_HOST=\.*/";
-        $string = "MSQL_HOST="."\"$string\"";
-    }
-
-    $file = file_get_contents('.env');
-    $output = preg_replace(
-        $pattern, $string, $file
-    );
-    file_put_contents('.env', $output);
-    if($output) return true;
-    return false;
-}
-
 // Check if command is specified
 if (!isset($argv[1])) {
     echo 'Type --help for a list of commands';
     return;
 }
-//0th position is phpfile name
-//1st position is arguments , we can ignore other for fix it to 2
-    $argument1 = $argv[1];
-    if (substr( $argument1, 0, 2 ) === "--") {
-    // It starts with '--'
-        $command = substr($argument1, 2);
 
-        switch ($command) {
+//display help commands
+if ($argv[1] === '--help') {
+    echo 'Usage :: php user_upload.php [username] [password] [hostname] [OPTIONS]'.PHP_EOL."\n";
+    echo 'The following options are available'.PHP_EOL;
+    echo '  --file csv_file_name    parse the given csv file and insert into the user table'.PHP_EOL;
+    echo '  --dry_run               used with the --file directive. parse the given file without inserting to the database'.PHP_EOL;
+    echo '  --create_table          create the MySQL user table'.PHP_EOL;
+    echo '  -u MySQL_username       user for accessing MySQL'.PHP_EOL;
+    echo '  -p MySQL_password       password to use while connecting to MySQL'.PHP_EOL;
+    echo '  --help                  display this help screen'.PHP_EOL;
+    return;
+}
+
+/**
+ * @param $keys
+ * @param $arr
+ * @return array
+ * 
+ * check if multiple keys are available within a given array
+ */
+function array_keys_exist(array $keys, array $arr) {
+    return array_diff_key(array_flip($keys), $arr);
+}
+
+/**
+ * @param array
+ * @return bool
+ * 
+ * check if proper options are set
+ */
+function mysqlAuthenticate(array $arr) {
+    //check if credentials are set
+    $keysExist = array_keys_exist(['u', 'p', 'h'], $arr);
+
+    if (count($keysExist)>0) {
+        if (array_key_exists('file', $arr) && array_key_exists('dry_run', $arr)) {
+            return true;
+        }
+        return false;
+    }
+
+    return true;
+}
+
+$shortOptions = "u:";
+$shortOptions .= "p:";
+$shortOptions .= "h:";
+$longOptions = array(
+    "file:",
+    "create_table::",
+    "dry_run"
+);
+
+$options = getopt($shortOptions, $longOptions);
+
+$auth = mysqlAuthenticate($options);
+
+if (!$auth) {
+    //check if credentials are set
+    $keysExist = array_keys_exist(['u', 'p', 'h'], $options);
+
+    if (count($keysExist)>0) {
+        foreach ($keysExist as $key => $value) {
+            switch($key) {
+                case 'u':
+                echo 'please enter username'.PHP_EOL;
+                break;
+
+                case 'h':
+                echo 'please enter hostname'.PHP_EOL;
+                break;
+
+                default:
+                echo 'please enter password'.PHP_EOL;
+                break;
+            }
+        }
+        return;
+    }
+}
+
+//check if dry run
+$dryRun = true;
+
+if (!(array_key_exists('file', $options) && array_key_exists('dry_run', $options))) {
+//set mysql credentials
+$mysqlUser = $options['u'];
+$mysqlPass = $options['p'];
+$mysqlHost = $options['h'];
+
+//instantiate db
+$db = Database::getInstance($mysqlUser, $mysqlPass, $mysqlHost);
+$dbLink = $db->getLink();
+
+$dryRun = false;
+}
+
+if (array_key_exists('file', $options) || array_key_exists('create_table', $options)) {
+
+    foreach ($options as $key => $value) {
+        
+        switch($key) {
             case 'create_table':
-                //get db connection
-                $db = Database::getInstance()->getLink();
-                
                 $sql = 'CREATE TABLE `users` ( 
                     `id` INT NOT NULL AUTO_INCREMENT ,
                     `name` VARCHAR(255) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL ,
@@ -74,130 +138,75 @@ if (!isset($argv[1])) {
                     PRIMARY KEY (`id`),
                     UNIQUE `UNIQUE` (`email`(255)))
                     ENGINE = InnoDB';
-                $result = mysqli_query($db, $sql) or die(mysqli_error($db));
+                $result = mysqli_query($dbLink, $sql) or die(mysqli_error($dbLink));
                 echo "Table created successfully";
             break;
 
-            case 'help':
-                //print the list of commands
-                echo 'Usage :: php user_upload.php [OPTIONS]'.PHP_EOL."\n";
-                echo 'The following options are available'.PHP_EOL;
-                echo '  --file csv_file_name    parse the given csv file and insert into the user table'.PHP_EOL;
-                echo '  --dry_run               used with the --file directive. parse the given file without inserting to the database'.PHP_EOL;
-                echo '  --create_table          create the MySQL user table'.PHP_EOL;
-                echo '  -u MySQL_username       user for accessing MySQL'.PHP_EOL;
-                echo '  -p MySQL_password       password to use while connecting to MySQL'.PHP_EOL;
-                echo '  --help                  display this help screen'.PHP_EOL;
-            break;
-
             case 'file':
-                $dryRun = false;
+            $filename = $value;
+            $filename = $filename.'.csv';
+            
+            //file parsing
+            $parser = Parser::getInstance();
+            $files = $parser->parseCsv($filename);
 
-                // Check if dry run
-                if (isset($argv[3])) {
-                    if ($argv[3] === '--dry_run') {
-                        $dryRun = true;
-                    } else {
-                        echo 'Invalid command, type --help for a list of available commands';
-                        return;
+            foreach ($files as $file) {
+                //Validate email address
+                if( !(filter_var($file[2], FILTER_VALIDATE_EMAIL)) ){
+                    $error = 'Invalid Email, Skipping Record';
+                    $log = csvErrorLogger($file, $error);
+                    if($log) {
+                        echo $error.PHP_EOL;
+                    }
+                    continue;  
+                }
+
+                //don't proceed if dry_run is enabled
+                if ($dryRun) continue;
+
+                $normalizedArray = [];
+
+                // Normalize the user data
+                foreach ($file as $item) {
+                    $item = strtolower($item);
+                    $item = ucfirst($item);
+                    $normalizedArray[] = $item;
+                }
+                $normalizedArray[2] = strtolower($normalizedArray[2]);
+
+                $original_cols = [
+                    'name',
+                    'surname',
+                    'email'
+                ];
+
+                //insert to db
+                $sql = $db->buildInsertQuery(
+                    $original_cols, $normalizedArray, 'users'
+                );
+                
+                if ($sql === false) {
+                    die('Failed to build sql');
+                }
+
+                //Display success or failure message
+                $results = mysqli_query($dbLink, $sql);
+                if ($results) {
+                    echo 'Data Inserted Successfully'.PHP_EOL;
+                } else {
+                    $log = csvErrorLogger($normalizedArray, mysqli_error($dbLink));
+                    if($log) {
+                        echo mysqli_error($dbLink).PHP_EOL;
                     }
                 }
-                
-                if (!$dryRun) {
-                // get db instance
-                $db = Database::getInstance()->getLink();
-                }
-
-                //fetch the filename
-                $filename = $argv[2];
-                $filename = $filename.'.csv';
-                
-                //file parsing
-                $parser = Parser::getInstance();
-                $files = $parser->parseCsv($filename);
-
-                foreach ($files as $file) {
-                    //Validate email address
-                    if( !(filter_var($file[2], FILTER_VALIDATE_EMAIL)) ){
-                        $error = 'Invalid Email, Skipping Record';
-                        $log = csvErrorLogger($file, $error);
-                        if($log) {
-                            echo $error.PHP_EOL;
-                        }
-                        continue;  
-                    }
-
-                    //don't proceed if dry_run is enabled
-                    if ($dryRun) continue;
-
-                    $normalizedArray = [];
-
-                    // Normalize the user data
-                    foreach ($file as $item) {
-                        $item = strtolower($item);
-                        $item = ucfirst($item);
-                        $normalizedArray[] = $item;
-                    }
-                    $normalizedArray[2] = strtolower($normalizedArray[2]);
-
-                     //insert to db
-                    $sql = Database::getInstance()->buildInsertQuery(
-                        $original_cols, $normalizedArray, 'users'
-                    );
-                    
-                    if ($sql === false) {
-                        die('Failed to build sql');
-                    }
-
-                    //Display success or failure message
-                    $results = mysqli_query($db, $sql);
-                    if ($results) {
-                        echo 'Data Inserted Successfully'.PHP_EOL;
-                    } else {
-                        $log = csvErrorLogger($normalizedArray, mysqli_error($db));
-                        if($log) {
-                            echo mysqli_error($db).PHP_EOL;
-                        }
-                    }
-                } 
+            }
             break;
 
             default:
-                echo "i dont know  this";
-        }
-    } elseif (substr( $argument1, 0, 1 ) === "-") {
-        $command = substr($argument1, 1);
-        
-        if (($command === 'u') || ($command === 'p') || ($command === 'h')) {
-            if (isset($argv[2])) {
-                $string = $argv[2];
-                $updateVar = updateEnv($string, $command);
-                if ($updateVar) { echo 'Updated Successfully'; }
-            } else {
-                return;
-            }
-        } else {
-            echo 'invalid';
-            return;
+            break;
         }
     }
-        
-    //     switch ($command) {
-    //         case 'u':
-    //             $updateUser = updateEnv($user, 'u');
-    //             if ($updateUser) { echo 'Username Updated'; }
-    //         break;
-
-    //         case 'p':
-    //         break;
-
-    //         case 'h':
-    //         break;
-
-    //         default:
-    //         echo 'I don\'t know this';
-    //     }
-
-    // } else {
-    //     echo "invalid parameter";
-    // }
+} else {
+    echo 'Please select an option. Refer to --help for available options'.PHP_EOL;
+    return;
+}

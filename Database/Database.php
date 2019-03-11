@@ -21,22 +21,28 @@ class Database
      * @return DB
      * singleton
      */
-    public static function getInstance()
+    public static function getInstance($user, $pass, $host)
     {
         if (!self::$instance instanceof self) {
-            self::$instance = new Database();
+            self::$instance = new Database($user, $pass, $host);
         }
         return self::$instance;
     }
 
-    private function __construct()
+    private function __construct($user='', $password='', $host='')
     {
-        $env = Dotenv::create(__DIR__.'/../');
-        $env->load();
+        if ($user=='' || $password=='' || $host=='') {
+            $env = Dotenv::create(__DIR__.'/../');
+            $env->load();
 
-        $this->host = $_ENV['MSQL_HOST'];
-        $this->user = $_ENV['MSQL_USER'];
-        $this->password = $_ENV['MSQL_PASS'];
+            $this->host = $_ENV['MSQL_HOST'];
+            $this->user = $_ENV['MSQL_USER'];
+            $this->password = $_ENV['MSQL_PASS'];
+        } else {
+            $this->host = $host;
+            $this->user = $user;
+            $this->password = $password;
+        }
 
         $this->link = mysqli_connect(
             $this->host, $this->user, $this->password, $this->db_name
