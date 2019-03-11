@@ -33,3 +33,19 @@ The users table must be created with the __--create_table__ directive.
 
 Error log file can be found within the project directory if any error occurs during database insertions.
 
+Example:
+
+<pre>php user_uploads.php -u username -p password -h hostname --OPTION</pre>
+
+## Thoughts & Assumptions
+
+I had fun working on the app. 
+
+The MySQL credentials include a fallback mode if not specified. The credentials can be set using environment variables.
+
+Usage of env var is encouraged as writing passwords directly on cli is security risk as all the commands are recorded in history as well.
+
+### Using environment variables
+
+* Copy the .env.example as .env
+* Set the credentials within the .env
