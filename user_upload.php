@@ -47,7 +47,8 @@ if ($argv[1] === '--help') {
  * 
  * check if multiple keys are available within a given array
  */
-function array_keys_exist(array $keys, array $arr) {
+function array_keys_exist(array $keys, array $arr)
+{
     return array_diff_key(array_flip($keys), $arr);
 }
 
@@ -57,7 +58,8 @@ function array_keys_exist(array $keys, array $arr) {
  * 
  * check if proper options are set
  */
-function mysqlAuthenticate(array $arr) {
+function mysqlAuthenticate(array $arr)
+{
     //check if credentials are set
     $keysExist = array_keys_exist(['u', 'p', 'h'], $arr);
 
@@ -128,9 +130,9 @@ if (array_key_exists('file', $options) || array_key_exists('create_table', $opti
 
     foreach ($options as $key => $value) {
         
-        switch($key) {
+        switch ($key) {
             case 'create_table':
-                $sql = 'CREATE TABLE `users` ( 
+                $sql = 'CREATE TABLE IF NOT EXISTS `users` ( 
                     `id` INT NOT NULL AUTO_INCREMENT ,
                     `name` VARCHAR(255) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL ,
                     `surname` VARCHAR(255) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL ,
@@ -152,51 +154,52 @@ if (array_key_exists('file', $options) || array_key_exists('create_table', $opti
 
             foreach ($files as $file) {
                 //Validate email address
-                if( !(filter_var($file[2], FILTER_VALIDATE_EMAIL)) ){
+                if (!(filter_var($file[2], FILTER_VALIDATE_EMAIL))){
                     $error = 'Invalid Email, Skipping Record';
                     $log = csvErrorLogger($file, $error);
-                    if($log) {
+                    if ($log) {
                         echo $error.PHP_EOL;
                     }
                     continue;  
                 }
 
                 //don't proceed if dry_run is enabled
-                if ($dryRun) continue;
+                if (!$dryRun) {
 
-                $normalizedArray = [];
+                    $normalizedArray = [];
 
-                // Normalize the user data
-                foreach ($file as $item) {
-                    $item = strtolower($item);
-                    $item = ucfirst($item);
-                    $normalizedArray[] = $item;
-                }
-                $normalizedArray[2] = strtolower($normalizedArray[2]);
+                    // Normalize the user data
+                    foreach ($file as $item) {
+                        $item = strtolower($item);
+                        $item = ucfirst($item);
+                        $normalizedArray[] = $item;
+                    }
+                    $normalizedArray[2] = strtolower($normalizedArray[2]);
 
-                $original_cols = [
-                    'name',
-                    'surname',
-                    'email'
-                ];
+                    $original_cols = [
+                        'name',
+                        'surname',
+                        'email'
+                    ];
 
-                //insert to db
-                $sql = $db->buildInsertQuery(
-                    $original_cols, $normalizedArray, 'users'
-                );
-                
-                if ($sql === false) {
-                    die('Failed to build sql');
-                }
+                    //insert to db
+                    $sql = $db->buildInsertQuery(
+                        $original_cols, $normalizedArray, 'users'
+                    );
+                    
+                    if ($sql === false) {
+                        die('Failed to build sql');
+                    }
 
-                //Display success or failure message
-                $results = mysqli_query($dbLink, $sql);
-                if ($results) {
-                    echo 'Data Inserted Successfully'.PHP_EOL;
-                } else {
-                    $log = csvErrorLogger($normalizedArray, mysqli_error($dbLink));
-                    if($log) {
-                        echo mysqli_error($dbLink).PHP_EOL;
+                    //Display success or failure message
+                    $results = mysqli_query($dbLink, $sql);
+                    if ($results) {
+                        echo 'Data Inserted Successfully'.PHP_EOL;
+                    } else {
+                        $log = csvErrorLogger($normalizedArray, mysqli_error($dbLink));
+                        if($log) {
+                            echo mysqli_error($dbLink).PHP_EOL;
+                        }
                     }
                 }
             }
