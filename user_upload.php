@@ -11,7 +11,7 @@ use Helpers\Parser;
  */
 function csvErrorLogger($array, $error)
 {
-    $array = array_reduce($array, function($carry, $item) {
+    $array = array_reduce($array, function ($carry, $item) {
         return $carry.'`'.$item.'`,';
     });
     $error = 'Could not Insert the row '.$array.' '.$error.PHP_EOL;
@@ -44,7 +44,6 @@ if ($argv[1] === '--help') {
  * @param $keys
  * @param $arr
  * @return array
- * 
  * check if multiple keys are available within a given array
  */
 function array_keys_exist(array $keys, array $arr)
@@ -55,9 +54,9 @@ function array_keys_exist(array $keys, array $arr)
 /**
  * @param array
  * @return bool
- * 
+ *
  * check if proper options are set
- */
+*/
 function mysqlAuthenticate(array $arr)
 {
     //check if credentials are set
@@ -91,18 +90,18 @@ if (!$auth) {
 
     if (count($keysExist)>0) {
         foreach ($keysExist as $key => $value) {
-            switch($key) {
+            switch ($key) {
                 case 'u':
-                echo 'please enter username'.PHP_EOL;
-                break;
+                    echo 'please enter username'.PHP_EOL;
+                    break;
 
                 case 'h':
-                echo 'please enter hostname'.PHP_EOL;
-                break;
+                    echo 'please enter hostname'.PHP_EOL;
+                    break;
 
                 default:
-                echo 'please enter password'.PHP_EOL;
-                break;
+                    echo 'please enter password'.PHP_EOL;
+                    break;
             }
         }
         return;
@@ -113,22 +112,20 @@ if (!$auth) {
 $dryRun = true;
 
 if (!(array_key_exists('file', $options) && array_key_exists('dry_run', $options))) {
-//set mysql credentials
-$mysqlUser = $options['u'];
-$mysqlPass = $options['p'];
-$mysqlHost = $options['h'];
+    //set mysql credentials
+    $mysqlUser = $options['u'];
+    $mysqlPass = $options['p'];
+    $mysqlHost = $options['h'];
 
-//instantiate db
-$db = Database::getInstance($mysqlUser, $mysqlPass, $mysqlHost);
-$dbLink = $db->getLink();
+    //instantiate db
+    $db = Database::getInstance($mysqlUser, $mysqlPass, $mysqlHost);
+    $dbLink = $db->getLink();
 
-$dryRun = false;
+    $dryRun = false;
 }
 
 if (array_key_exists('file', $options) || array_key_exists('create_table', $options)) {
-
     foreach ($options as $key => $value) {
-        
         switch ($key) {
             case 'create_table':
                 $sql = 'CREATE TABLE IF NOT EXISTS `users` ( 
@@ -144,68 +141,68 @@ if (array_key_exists('file', $options) || array_key_exists('create_table', $opti
             break;
 
             case 'file':
-            $filename = $value;
-            $filename = $filename.'.csv';
+                $filename = $value;
+                $filename = $filename.'.csv';
             
-            //file parsing
-            $parser = Parser::getInstance();
-            $files = $parser->parseCsv($filename);
+                //file parsing
+                $parser = Parser::getInstance();
+                $files = $parser->parseCsv($filename);
 
-            foreach ($files as $file) {
-                //Validate email address
-                if (!(filter_var($file[2], FILTER_VALIDATE_EMAIL))){
-                    $error = 'Invalid Email, Skipping Record';
-                    $log = csvErrorLogger($file, $error);
-                    if ($log) {
-                        echo $error.PHP_EOL;
+                foreach ($files as $file) {
+                    //Validate email address
+                    if (!(filter_var($file[2], FILTER_VALIDATE_EMAIL))) {
+                        $error = 'Invalid Email, Skipping Record';
+                        $log = csvErrorLogger($file, $error);
+                        if ($log) {
+                            echo $error.PHP_EOL;
+                        }
+                        continue;
                     }
-                    continue;  
-                }
+                    //don't proceed if dry_run is enabled
+                    if (!$dryRun) {
+                        $normalizedArray = [];
 
-                //don't proceed if dry_run is enabled
-                if (!$dryRun) {
+                        // Normalize the user data
+                        foreach ($file as $item) {
+                            $item = strtolower($item);
+                            $item = ucfirst($item);
+                            $normalizedArray[] = $item;
+                        }
+                        $normalizedArray[2] = strtolower($normalizedArray[2]);
 
-                    $normalizedArray = [];
+                        $original_cols = [
+                            'name',
+                            'surname',
+                            'email'
+                        ];
 
-                    // Normalize the user data
-                    foreach ($file as $item) {
-                        $item = strtolower($item);
-                        $item = ucfirst($item);
-                        $normalizedArray[] = $item;
-                    }
-                    $normalizedArray[2] = strtolower($normalizedArray[2]);
+                        //insert to db
+                        $sql = $db->buildInsertQuery(
+                            $original_cols,
+                            $normalizedArray,
+                            'users'
+                        );
+                        
+                        if ($sql === false) {
+                            die('Failed to build sql');
+                        }
 
-                    $original_cols = [
-                        'name',
-                        'surname',
-                        'email'
-                    ];
-
-                    //insert to db
-                    $sql = $db->buildInsertQuery(
-                        $original_cols, $normalizedArray, 'users'
-                    );
-                    
-                    if ($sql === false) {
-                        die('Failed to build sql');
-                    }
-
-                    //Display success or failure message
-                    $results = mysqli_query($dbLink, $sql);
-                    if ($results) {
-                        echo 'Data Inserted Successfully'.PHP_EOL;
-                    } else {
-                        $log = csvErrorLogger($normalizedArray, mysqli_error($dbLink));
-                        if($log) {
-                            echo mysqli_error($dbLink).PHP_EOL;
+                        //Display success or failure message
+                        $results = mysqli_query($dbLink, $sql);
+                        if ($results) {
+                            echo 'Data Inserted Successfully'.PHP_EOL;
+                        } else {
+                            $log = csvErrorLogger($normalizedArray, mysqli_error($dbLink));
+                            if ($log) {
+                                echo mysqli_error($dbLink).PHP_EOL;
+                            }
                         }
                     }
                 }
-            }
-            break;
+                break;
 
             default:
-            break;
+                break;
         }
     }
 } else {
