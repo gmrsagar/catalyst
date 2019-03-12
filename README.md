@@ -1,49 +1,54 @@
 # Catalyst [![Maintainability](https://api.codeclimate.com/v1/badges/fc59ecf978df906c9065/maintainability)](https://codeclimate.com/github/gmrsagar/catalyst/maintainability)
 
+This is a PHP CLI app that  accepts a CSV file as input and parses the file data to be
+inserted into a MySQL database. The CSV file with test data is included in this repo.
+
 ## Dependencies
 
 ### [PHPDotEnv](https://github.com/vlucas/phpdotenv)
-Used for implementation of environment files to safely store credentials.
+This dependency is used in the app to create environment files inorder to store the credentials safely.
 
 ## Directives
 
-__-u MySQL_username__ &nbsp; &nbsp; &nbsp; Provide the MySql Username.
+The app makes use of the following directives
 
-__-p MySQL_password__ &nbsp; &nbsp; &nbsp; The password used to connect to MySQL.
+| Directive | Description  | 
+|----|---|
+| -u MySQL_username    | For providing the MySql Username |
+| -p MySQL_password    | For providing the password used to connect to MySQL |
+| -h MySQL_host        | For providing the host for MySQL instance |
+| --file csv_file_name | To parse the given csv file (filename without extension) and insert each row to the users table |
+| --create_table       | To create the users table |
+| --help               | To display the list of available options |
+| --dry_run            | Used with the --file directive. Parses the given file without database insertions  |
 
-__-h MySQL_host__ &nbsp; &nbsp; &nbsp; &nbsp; The host for MySQL instance.
-
-__--file csv_file_name__ &nbsp; &nbsp; &nbsp; Parses the given csv file (filename without extension) and inserts each row to the users table.
-
-__--create_table__ &nbsp; &nbsp; &nbsp; Create the users table.
-
-__--help__ &nbsp; &nbsp; &nbsp; Display the list of available options.
-
-__--dry_run__ &nbsp; &nbsp; &nbsp; Used with the --file directive. Parses the given file without database insertions.
 
 ## Installation and Activation
 
-Composer update must be executed to install the dependencies.
+Run `composer install` to install the dependencies.
 
-Database 'catalyst' must exist or update the database name within the Database.php file.
+Run `php user_uploads.php -u username -p password -h hostname --OPTION` to start the app.
 
-The directives __-u, -p and -h__ must first be fired to set the MySQL credentials.
+The default database used is named 'catalyst'. To specify your own database, update the the database name in Database.php file accordingly.
 
-The users table must be created with the __--create_table__ directive.
+MySQL credentials can be provided using the directives __-u MySQL_username -p MySQL_password and -h MySQL_hostname__ .
 
-Error log file can be found within the project directory if any error occurs during database insertions.
+The users table can be created with the __--create_table__ directive.
 
-Example:
+Error log file can be found in error.php within the project directory(if any error occurs during database insertions).
 
-<pre>php user_uploads.php -u username -p password -h hostname --OPTION</pre>
 
 ## Thoughts & Assumptions
 
-I had fun working on the app. 
+The MySQL credentials include a fallback mode to get credentials from .env file if not specified explicitly. The credentials can be set using environment variables.
 
-The MySQL credentials include a fallback mode if not specified. The credentials can be set using environment variables.
+Usage of environment variables is encouraged as writing passwords directly on cli is security risk as all the commands are recorded in history as well.
 
-Usage of env var is encouraged as writing passwords directly on cli is security risk as all the commands are recorded in history as well.
+The username, password and hostname must either be set on the environment variables or provided on each run(except on --dry_run).
+
+Each directive is individually run except for --dry_run which is used with the --file directive.
+
+The CSV filename is provided without extension (extension will be added automatically).
 
 ### Using environment variables
 
