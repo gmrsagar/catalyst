@@ -4,7 +4,6 @@ namespace Database;
 
 use Dotenv\Dotenv;
 
-
 class Database
 {
     private $host;
@@ -29,7 +28,7 @@ class Database
         return self::$instance;
     }
 
-    private function __construct($user='', $password='', $host='')
+    private function __construct($user = '', $password = '', $host = '')
     {
         if ($user=='' || $password=='' || $host=='') {
             $env = Dotenv::create(__DIR__.'/../');
@@ -45,14 +44,16 @@ class Database
         }
 
         $this->link = mysqli_connect(
-            $this->host, $this->user, $this->password, $this->db_name
+            $this->host,
+            $this->user,
+            $this->password,
+            $this->db_name
         );
     }
 
     //refuse clone
     private function __clone()
     {
-
     }
 
     //get db connection
@@ -68,20 +69,22 @@ class Database
      */
     public function buildInsertQuery($columns, $array, $table)
     {
-        $cols = array_reduce($columns, function($carry, $item) {
+        $cols = array_reduce($columns, function ($carry, $item) {
             return $carry.'`'.$item.'`,';
         });
 
         //remove last comma
-        $cols = substr($cols, 0 , -1);
+        $cols = substr($cols, 0, -1);
         
         $sql = "INSERT INTO "."`$table`"." ($cols) VALUES ";
 
         //check data
-        if(!isset($array)||empty($array)) return false;
+        if (!isset($array)||empty($array)) {
+            return false;
+        }
 
         //build sub sql
-        $array  = array_reduce($array, function($carry, $item) {
+        $array  = array_reduce($array, function ($carry, $item) {
             return $carry.'"'.$item.'",';
         });
         $array = substr($array, 0, -1);
@@ -89,5 +92,4 @@ class Database
         $sql = $sql."(".$sub_sql.");";
         return $sql;
     }
-
 }
