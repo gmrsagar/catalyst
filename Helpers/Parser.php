@@ -4,31 +4,12 @@ namespace Helpers;
 
 class Parser
 {
-    public static $instance;
-
-    /**
-     * @return Parser
-     * Singleton
-     */
-    public static function getInstance()
-    {
-        if (!self::$instance instanceof self) {
-            self::$instance = new Parser();
-        }
-        return self::$instance;
-    }
-
-    //refuse clone
-    private function __clone()
-    {
-    }
-
     /**
      * @param $filename
      * @return array|bool
      * Reads a CSV file and returns the csv in form of an array
      */
-    public function parseCsv($filename)
+    public function parseCsv(string $filename)
     {
         $file = fopen($filename, 'r');
         if (!$file) {

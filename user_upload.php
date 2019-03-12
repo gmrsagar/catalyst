@@ -9,7 +9,7 @@ use Helpers\Parser;
  * @param $array, $error
  * @return bool
  */
-function csvErrorLogger($array, $error)
+function csvErrorLogger(array $array, string $error)
 {
     $array = array_reduce($array, function ($carry, $item) {
         return $carry.'`'.$item.'`,';
@@ -19,25 +19,6 @@ function csvErrorLogger($array, $error)
         return true;
     }
     return false;
-}
-
-// Check if command is specified
-if (!isset($argv[1])) {
-    echo 'Type --help for a list of commands';
-    return;
-}
-
-//display help commands
-if ($argv[1] === '--help') {
-    echo 'Usage :: php user_upload.php [username] [password] [hostname] [OPTIONS]'.PHP_EOL."\n";
-    echo 'The following options are available'.PHP_EOL;
-    echo '  --file csv_file_name    parse the given csv file and insert into the user table'.PHP_EOL;
-    echo '  --dry_run               used with the --file directive. parse the given file without inserting to the database'.PHP_EOL;
-    echo '  --create_table          create the MySQL user table'.PHP_EOL;
-    echo '  -u MySQL_username       user for accessing MySQL'.PHP_EOL;
-    echo '  -p MySQL_password       password to use while connecting to MySQL'.PHP_EOL;
-    echo '  --help                  display this help screen'.PHP_EOL;
-    return;
 }
 
 /**
@@ -71,6 +52,25 @@ function mysqlAuthenticate(array $arr)
     return true;
 }
 
+// Check if command is specified
+if (!isset($argv[1])) {
+    echo 'Type --help for a list of commands';
+    return;
+}
+
+//display help commands
+if ($argv[1] === '--help') {
+    echo 'Usage :: php user_upload.php [username] [password] [hostname] [OPTIONS]'.PHP_EOL."\n";
+    echo 'The following options are available'.PHP_EOL;
+    echo '  --file csv_file_name    parse the given csv file and insert into the user table'.PHP_EOL;
+    echo '  --dry_run               used with the --file directive. parse the given file without inserting to the database'.PHP_EOL;
+    echo '  --create_table          create the MySQL user table'.PHP_EOL;
+    echo '  -u MySQL_username       user for accessing MySQL'.PHP_EOL;
+    echo '  -p MySQL_password       password to use while connecting to MySQL'.PHP_EOL;
+    echo '  --help                  display this help screen'.PHP_EOL;
+    return;
+}
+
 $shortOptions = "u:";
 $shortOptions .= "p:";
 $shortOptions .= "h:";
@@ -87,7 +87,6 @@ $auth = mysqlAuthenticate($options);
 if (!$auth) {
     //check if credentials are set
     $keysExist = array_keys_exist(['u', 'p', 'h'], $options);
-
     if (count($keysExist)>0) {
         foreach ($keysExist as $key => $value) {
             switch ($key) {
@@ -107,7 +106,6 @@ if (!$auth) {
         return;
     }
 }
-
 //check if dry run
 $dryRun = true;
 
@@ -120,7 +118,7 @@ if (!(array_key_exists('file', $options) && array_key_exists('dry_run', $options
     //instantiate db
     $db = Database::getInstance($mysqlUser, $mysqlPass, $mysqlHost);
     $dbLink = $db->getLink();
-
+    // not dry_run
     $dryRun = false;
 }
 
@@ -145,7 +143,7 @@ if (array_key_exists('file', $options) || array_key_exists('create_table', $opti
                 $filename = $filename.'.csv';
             
                 //file parsing
-                $parser = Parser::getInstance();
+                $parser = new Parser();
                 $files = $parser->parseCsv($filename);
 
                 foreach ($files as $file) {
@@ -177,25 +175,22 @@ if (array_key_exists('file', $options) || array_key_exists('create_table', $opti
                         ];
 
                         //insert to db
-                        $sql = $db->buildInsertQuery(
-                            $original_cols,
-                            $normalizedArray,
-                            'users'
-                        );
-                        
-                        if ($sql === false) {
-                            die('Failed to build sql');
+                        try {
+                            $sql = $db->buildInsertQuery(
+                                $original_cols,
+                                $normalizedArray,
+                                'users',
+                                $db
+                            );
+                        } catch (Exception $e) {
+                            $msg = $e->getMessage();
+                            echo $msg.PHP_EOL;
+                            $log = csvErrorLogger($normalizedArray, $msg);
+                            $sql = false;
                         }
-
-                        //Display success or failure message
-                        $results = mysqli_query($dbLink, $sql);
-                        if ($results) {
+                        
+                        if ($sql) {
                             echo 'Data Inserted Successfully'.PHP_EOL;
-                        } else {
-                            $log = csvErrorLogger($normalizedArray, mysqli_error($dbLink));
-                            if ($log) {
-                                echo mysqli_error($dbLink).PHP_EOL;
-                            }
                         }
                     }
                 }

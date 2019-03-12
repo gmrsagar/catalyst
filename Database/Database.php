@@ -20,7 +20,7 @@ class Database
      * @return DB
      * singleton
      */
-    public static function getInstance($user, $pass, $host)
+    public static function getInstance(String $user, String $pass, String $host)
     {
         if (!self::$instance instanceof self) {
             self::$instance = new Database($user, $pass, $host);
@@ -28,7 +28,7 @@ class Database
         return self::$instance;
     }
 
-    private function __construct($user = '', $password = '', $host = '')
+    private function __construct(String $user = '', String $password = '', String $host = '')
     {
         if ($user=='' || $password=='' || $host=='') {
             $env = Dotenv::create(__DIR__.'/../');
@@ -67,29 +67,26 @@ class Database
      * @param $array
      * @return bool|string
      */
-    public function buildInsertQuery($columns, $array, $table)
+    public function buildInsertQuery(array $columns, array $array, string $table, Database $db)
     {
         $cols = array_reduce($columns, function ($carry, $item) {
             return $carry.'`'.$item.'`,';
         });
-
-        //remove last comma
-        $cols = substr($cols, 0, -1);
-        
-        $sql = "INSERT INTO "."`$table`"." ($cols) VALUES ";
-
         //check data
         if (!isset($array)||empty($array)) {
             return false;
         }
-
-        //build sub sql
-        $array  = array_reduce($array, function ($carry, $item) {
-            return $carry.'"'.$item.'",';
-        });
-        $array = substr($array, 0, -1);
-        $sub_sql = ($array);
-        $sql = $sql."(".$sub_sql.");";
-        return $sql;
+        //remove last comma
+        $cols = substr($cols, 0, -1);        
+        $sql = $db->getLink()->prepare("INSERT INTO "."`$table`"." ($cols) VALUES (?, ?, ?)");
+        $result = false;
+        $sql->bind_param('sss', $array[0], $array[1], $array[2]);
+        if ($sql->execute()) {
+            $result = true;
+        } else {
+            throw new \Exception($sql->error);
+        }
+        $sql->close();
+        return $result;
     }
 }
