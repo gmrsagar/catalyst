@@ -12,7 +12,7 @@ class Parser
      */
     public static function getInstance()
     {
-        if( !self::$instance instanceOf self) {
+        if (!self::$instance instanceof self) {
             self::$instance = new Parser();
         }
         return self::$instance;
@@ -21,7 +21,6 @@ class Parser
     //refuse clone
     private function __clone()
     {
-        
     }
 
     /**
@@ -32,14 +31,17 @@ class Parser
     public function parseCsv($filename)
     {
         $file = fopen($filename, 'r');
-        if(!$file) return false;
+        if (!$file) {
+            return false;
+        }
 
         $csvArray = [];
         $i=0;
-        while( ($data = fgetcsv($file)) !== false ) {
-
+        while (($data = fgetcsv($file)) !== false) {
             //Filter invalid data
-            if (count($data) < 3 ) continue;
+            if (count($data) < 3) {
+                continue;
+            }
             $csvArray[] = $data;
         }
         fclose($file);
@@ -48,6 +50,4 @@ class Parser
         array_shift($csvArray);
         return $csvArray;
     }
-
-
 }
