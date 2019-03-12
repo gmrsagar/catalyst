@@ -69,7 +69,6 @@ function mysqlAuthenticate(array $arr)
         }
         return false;
     }
-
     return true;
 }
 
